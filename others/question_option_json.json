@@ -1,0 +1,26 @@
+{
+	"question_option_set": [
+		{
+			"quiz_id": 2,
+			"question": "abg",
+			"type": "sc",
+			"options": [
+				{
+					"text": "o1",
+					"image": "",
+					"is_correct": "0"
+				},
+				{
+					"text": "o2",
+					"image": "",
+					"is_correct": "0"
+				},
+				{
+					"text": "o3",
+					"image": "",
+					"is_correct": "0"
+				}
+			]
+		}
+	]
+}

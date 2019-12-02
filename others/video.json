@@ -1,0 +1,38 @@
+[
+    {
+        "video_url" : "http://video.mp4",
+        "overlay": [
+            {
+                "type" : "text",
+                "position": "top | bottom",
+                "font-size": "12",
+                "font-style": "bold",
+                "font-family": "arial",
+                "font-color": "#f2f2f2",
+                "css" : {}
+            },
+            {
+                "type": "image",
+                "url": "http://image.png",
+                "x": "550",
+                "y": "250",
+                "height": "100",
+                "width": "100",
+                "border": "none",
+                "css" : {}
+            }
+        ],
+        "frames" : [
+            {
+                "position": "first | last | second",
+                "url" : "http://frame1.png",
+                "duration": "5"
+            },
+            {
+                "position": "first | last | second",
+                "url" : "http://frame2.png",
+                "duration": "2"
+            }
+        ]
+    }
+]
