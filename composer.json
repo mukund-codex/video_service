@@ -11,7 +11,13 @@
     "require": {
         "php": "^7.2",
         "flipbox/lumen-generator": "^6.0",
-        "laravel/lumen-framework": "^6.0"
+        "guzzlehttp/guzzle": "^6.5",
+        "illuminate/redis": "^6.7",
+        "laravel/lumen-framework": "^6.0",
+        "monolog/monolog": "1.x-dev",
+        "php-ffmpeg/extras": "^0.3.1",
+        "php-ffmpeg/php-ffmpeg": "^0.14.0",
+        "predis/predis": "^1.1"
     },
     "require-dev": {
         "fzaninotto/faker": "^1.4",
