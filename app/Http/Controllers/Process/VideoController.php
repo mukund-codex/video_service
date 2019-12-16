@@ -30,7 +30,7 @@ class VideoController extends Controller {
 
         $video = json_decode($temp);
         $errors = [];
-
+        
         if(empty($video)) {
             $errors = ['data' => 'Data cannot be empty!'];
             $this->throwError($requestId, $temp, $errors);
@@ -41,6 +41,11 @@ class VideoController extends Controller {
 
         if(!isset($video->video_url)) {
             $errors = ['video_url' => 'Video URL is Required!'];
+            $this->throwError($requestId, $temp, $errors);
+        }
+
+        if(!isset($video->callback)) {
+            $errors = ['callback' => 'Callback URL is Required!'];
             $this->throwError($requestId, $temp, $errors);
         }
 

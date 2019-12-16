@@ -6,6 +6,8 @@ use App\Models\VideoRequestModel;
 use App\Models\VideoResponseModel;
 use App\Helpers\{VideoFrameHelper, VideoLength, Common};
 use Log;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 class VideoJob extends Job
 {   
@@ -36,16 +38,15 @@ class VideoJob extends Job
         $requestData = json_decode($requestRecord->request, TRUE);
         $requestId = $requestRecord->request_id;
         $videoUrl = $requestData[0]['video_url'];
+        $callback = $requestData[0]['callback'];
 
-        $fileName = $this->downloadVideos($videoUrl, $requestId);
+       /*  $fileName = $this->downloadVideos($videoUrl, $requestId);
         if(empty($fileName)){
             \dd('Error in Video Download');
-        }
+        } */
 
         $textOverlay = [];
         $imageOverlay = [];
-
-        //drawtext=fontfile=/path/to/font.ttf:text='Test Text': x=100: y=100: fontsize=30:fontcolor=Blue, drawtext=fontfile=/path/to/font.ttff:text='Focal Length':x=(w-text_w)/3: y=(h-text_h)/3:fontsize=18:fontcolor=Blue"
 
         if(!empty($requestData[0]['overlay'])){
             
@@ -112,11 +113,80 @@ class VideoJob extends Job
 
         }
 
+        $processInput = $this->createVideoCommand($requestId, $videoUrl, $textOverlay, $imageOverlay, $frameFirstData, $frameLastData);        
+        $process = new Process($processInput);
+        $process->setTimeout(300);
+         try {
+            $process->mustRun();
+        
+            $result = $process->getOutput();
+            \dd($result);
+            $result = true;
+            if($result) {
+                $video_url = url('video-service/uploads/outputVideos/'.$requestId.'.mp4');
+
+                $responseData = new VideoResponseModel();
+                $responseData->request_id = $requestId;
+                $responseData->response = \json_encode(['video_url' => $video_url]);
+        
+                if($responseData->save()){
+                    $request = Common::processRequest('POST', [], $callback, 'form_params', ['request_id' => $requestId, 'video_url' => $video_url, 'success' => true, 'status_code' => '200']);
+        
+                    Log::info('Callback Response : '.(int) $request);
+                }
+            }
+            
+            Log::info('Process Output Completed', [
+                'request_id' => $this->request_id,
+                'status' => (int) $result,
+                'output' => $result,
+                'response_time' => date('Y-m-d H:i:s')
+            ]);
+
+        } catch (ProcessFailedException $exception) {
+            Log::error('Process Failed', [
+                'request_id' => $requestId,
+                'error' => $exception->getMessage(),
+                'response_time' => date('Y-m-d H:i:s')
+            ]);
+        }   
+        
+    }
+
+    public function downloadVideos($textOverlay, $imageOverlay, $frameFirstData, $frameLastData){
+
+        // Code to download Video to local machine
+        $video = \file_get_contents($videoUrl);
+        $fileName = '/var/www/html/video-service/uploads/videos/'.$requestId.'.mp4';
+        $downloadVideo = \file_put_contents($fileName, $video);
+
+        return $fileName;
+
+    }
+
+    public function createVideoCommand($requestId, $videoUrl, $textOverlay, $imageOverlay, $frameFirstData, $frameLastData){
+
         $frameFirstCommand = [];
         $frameLastCommand = [];
                 
         $drawtextCommand = '';
         
+        $imageOverlayCommand = '';
+
+        $imageOverlayFilter = '';
+
+        if(!empty($imageOverlay)){
+            foreach($imageOverlay as $image){
+                $imageOverlayCommand .= " -i ".$image['url'];
+                /* if(!empty($image['height']) && !empty($image['width'])){
+                    $imageOverlayFilter .= ",scale:".$image['width'].":".$image['height'];
+                } */
+                if(!empty($image['x']) && !empty($image['y'])){
+                    $imageOverlayFilter .= ",overlay=".$image['x'].":".$image['y'];
+                }
+            }
+        }
+
         if(!empty($textOverlay)){
             foreach($textOverlay as $text){
                 $drawtextCommand .= ",drawtext=";
@@ -173,36 +243,12 @@ class VideoJob extends Job
 
         $outputFile = "/var/www/html/video-service/uploads/outputVideos/".$requestId.".mp4";
 
-        $command = "ffmpeg -r 24 ".$frameFirstCommand['time']." ".$frameFirstCommand['url']." -i $videoUrl ".$frameLastCommand['time']." ".$frameLastCommand['url']." -filter_complex '$videoSetting'$drawtextCommand -strict -2 ".$outputFile;
+        $filterCommand = $videoSetting.$imageOverlayFilter.$drawtextCommand;
 
-        $command_output = shell_exec($command);
+        // ffmpeg -r 24 -loop 1 -t 5 -i https://www.sample-videos.com/img/Sample-png-image-1mb.png -i http://192.168.0.167/input2.mp4 -loop 1 -t 5 -i https://www.sample-videos.com/img/Sample-png-image-500kb.png -i https://bellard.org/bpg/2.png -filter_complex "[0]scale=1920:1080,setsar=1[im];[1]scale=1920:1080,setsar=1[vid];[2]scale=1920:1080,setsar=1[im];[im][vid][im]concat=n=3:v=1:a=0,overlay=25:25,drawtext=fontfile=/home/rakesh/Downloads/OpenSans-Bold.ttf:text='Test Text': x=100: y=100: fontsize=30:fontcolor=Blue, drawtext=fontfile=/home/rakesh/Downloads/OpenSans-Bold.ttf:text='Focal Length':x=(w-text_w)/3: y=(h-text_h)/3:fontsize=18:fontcolor=Blue" -strict -2 output.mp4
 
-        //http://localhost/video-service/uploads/outputVideos/JX5422014163.mp4
-
-        $video_url = url('video-service/uploads/outputVideos/'.$requestId.'.mp4');
-
-        $response_request = (json_encode($requestData));
+        $command = "ffmpeg -r 24 ".$frameLastCommand['time']." ".$frameLastCommand['url']." -i $videoUrl ".$frameFirstCommand['time']." ".$frameFirstCommand['url']." $imageOverlayCommand -filter_complex \"$filterCommand\" -strict -2 ".$outputFile;
         
-        $responseData = new VideoResponseModel();
-        $responseData->request_id = $requestId;
-        $responseData->response = \json_encode(['video_url' => $video_url]);
-
-        $responseData->save();
-
-        $request = Common::processRequest('POST', [], $callback, 'form_params', ['request_id' => $requestId, 'video_url' => $video_url, 'success' => true, 'status_code' => '200']);
-
-        Log::info('Callback Response : '.(int) $request);
-        
-    }
-
-    public function downloadVideos($videoUrl, $requestId){
-
-        // Code to download Video to local machine
-        $video = \file_get_contents($videoUrl);
-        $fileName = '/var/www/html/video-service/uploads/videos/'.$requestId.'.mp4';
-        $downloadVideo = \file_put_contents($fileName, $video);
-
-        return $fileName;
-
+        return $command;
     }
 }
