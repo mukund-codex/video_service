@@ -123,7 +123,7 @@ class VideoJob extends Job
             //\dd($result);
             $result = true;
             if($result) {
-                $video_url = url('Video_Service/uploads/outputVideos/'.$requestId.'.mp4');
+                $video_url = url('Videos_Service/uploads/outputVideos/'.$requestId.'.mp4');
 
                 $responseData = new VideoResponseModel();
                 $responseData->request_id = $requestId;
@@ -157,7 +157,7 @@ class VideoJob extends Job
 
         // Code to download Video to local machine
         $video = \file_get_contents($videoUrl);
-        $fileName = '/var/www/html/Video_Service/uploads/videos/'.$requestId.'.mp4';
+        $fileName = '/var/www/html/Videos_Service/uploads/videos/'.$requestId.'.mp4';
         $downloadVideo = \file_put_contents($fileName, $video);
 
         return $fileName;
@@ -241,7 +241,7 @@ class VideoJob extends Job
             $videoSetting = $frameFirstCommand['filters']."[1]scale=1920:1080,setsar=1[vid];".$frameLastCommand['filters'].$setting;
         }
 
-        $outputFile = "/var/www/html/video-service/uploads/outputVideos/".$requestId.".mp4";
+        $outputFile = "/var/www/html/Videos_Service/uploads/outputVideos/".$requestId.".mp4";
 
         $filterCommand = $videoSetting.$imageOverlayFilter.$drawtextCommand;
 
