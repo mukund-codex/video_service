@@ -120,10 +120,10 @@ class VideoJob extends Job
             $process->mustRun();
         
             $result = $process->getOutput();
-            \dd($result);
+            //\dd($result);
             $result = true;
             if($result) {
-                $video_url = url('video-service/uploads/outputVideos/'.$requestId.'.mp4');
+                $video_url = url('Video_Service/uploads/outputVideos/'.$requestId.'.mp4');
 
                 $responseData = new VideoResponseModel();
                 $responseData->request_id = $requestId;
@@ -137,7 +137,7 @@ class VideoJob extends Job
             }
             
             Log::info('Process Output Completed', [
-                'request_id' => $this->request_id,
+                'request_id' => $requestId,
                 'status' => (int) $result,
                 'output' => $result,
                 'response_time' => date('Y-m-d H:i:s')
@@ -157,7 +157,7 @@ class VideoJob extends Job
 
         // Code to download Video to local machine
         $video = \file_get_contents($videoUrl);
-        $fileName = '/var/www/html/video-service/uploads/videos/'.$requestId.'.mp4';
+        $fileName = '/var/www/html/Video_Service/uploads/videos/'.$requestId.'.mp4';
         $downloadVideo = \file_put_contents($fileName, $video);
 
         return $fileName;
