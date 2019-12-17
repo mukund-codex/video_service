@@ -17,8 +17,8 @@ class RequestTable extends Migration
         Schema::create('request', function(Blueprint $table){
             $table->integer('id')->autoIncrement();
             $table->string('request_id');
-            $table->jsonb('request');
-            $table->jsonb('response');
+            $table->json('request');
+            $table->json('response');
             $table->timestamps();
         });
     }

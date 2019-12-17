@@ -17,7 +17,7 @@ class ResponseTable extends Migration
         Schema::create('response', function(Blueprint $table){
             $table->integer('id')->autoIncrement();
             $table->string('request_id');
-            $table->jsonb('response');
+            $table->json('response');
             $table->timestamps();
         });
     }
