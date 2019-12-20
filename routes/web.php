@@ -11,8 +11,15 @@
 |
 */
 
-$router->get('/', function () use ($router) {
-    return $router->app->version();
+$router->group(['middleware' => []], function () use ($router) {
+    $router->get('/', function () use ($router) {
+        $res['success'] = true;
+        $res['data'] = [
+            'app_name' => env('APP_NAME', true),
+            'app_version' => env('APP_VERSION',true),
+        ];
+        return response($res);
+    });
 });
 
 $router->group(['namespace' => 'Process'], function() use ($router) {
