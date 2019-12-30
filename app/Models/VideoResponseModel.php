@@ -11,4 +11,7 @@ class VideoResponseModel extends Model
     protected $primaryKey = 'id';
     protected $table = 'response';
     protected $fillable = ['request_id', 'response'];
+    protected $casts = [
+        'response' => 'array'
+    ];
 }

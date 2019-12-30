@@ -19,16 +19,16 @@ class VideoController extends Controller {
 
     public function store(Request $request) {
 
-        $temp = $request->input('video');
-
+        $temp = $request->all();
+        
         $requestId = $this->random_num(12);
 
         Log::info('Request Initiated:: ', [
             'Request' => $request->all(), 
             'Request Time' => date('Y-m-d H:i:s')
         ]);
-
-        $video = json_decode($temp);
+        $video = $temp;
+        
         $errors = [];
         
         if(empty($video)) {
@@ -36,121 +36,120 @@ class VideoController extends Controller {
             $this->throwError($requestId, $temp, $errors);
         }
 
-        $video = $video[0];
         $overlay = $frames = [];
 
-        if(!isset($video->video_url)) {
+        if(!isset($video['video_url'])) {
             $errors = ['video_url' => 'Video URL is Required!'];
             $this->throwError($requestId, $temp, $errors);
         }
 
-        if(!isset($video->callback)) {
+        if(!isset($video['callback'])) {
             $errors = ['callback' => 'Callback URL is Required!'];
             $this->throwError($requestId, $temp, $errors);
         }
 
-        if(isset($video->overlay)) {
-            if(count($video->overlay)) {
-                $overlay = $video->overlay;
+        if(isset($video['overlay'])) {
+            if(count($video['overlay'])) {
+                $overlay = $video['overlay'];
             }
         }
-
-        if(isset($video->frames)) {
-            if(count($video->frames)) {
-                $frames = $video->frames;
+        
+        if(isset($video['frames'])) {
+            if(count($video['frames'])) {
+                $frames = $video['frames'];
             }
         }
 
         foreach($overlay as $overlay_row) {
-            if(!isset($overlay_row->type)) {
+            if(!isset($overlay_row['type'])) {
                 $errors = ['overlay_type' => 'Overlay Type is Required!'];
                 $this->throwError($requestId, $temp, $errors);
             }
 
-            $overlay_row->type = strtolower($overlay_row->type);
-            if(!in_array($overlay_row->type, ['text', 'image'])) {
+            $overlay_row['type'] = strtolower($overlay_row['type']);
+            if(!in_array($overlay_row['type'], ['text', 'image'])) {
                 $errors = ['overlay_type' => 'Overlay Type Must be image or text!'];
                 $this->throwError($requestId, $temp, $errors);
             }
 
-            if($overlay_row->type == "text") {
-                if(!isset($overlay_row->x)) {
+            if($overlay_row['type'] == "text") {
+                if(!isset($overlay_row['x'])) {
                     $errors = ['overlay_x' => 'Overlay X is Required!'];
                     $this->throwError($requestId, $temp, $errors);
                 }
-                $text_x = $overlay_row->x;
+                $text_x = $overlay_row['x'];
 
-                if(!isset($overlay_row->y)) {
+                if(!isset($overlay_row['y'])) {
                     $errors = ['overlay_y' => 'Overlay Y is Required!'];
                     $this->throwError($requestId, $temp, $errors);
                 }
-                $text_y = $overlay_row->y;
+                $text_y = $overlay_row['y'];
 
-                $font_size = (int)isset($overlay_row->font_size) ? $overlay_row->font_size : config('video.text.FONT_SIZE');
-                $font_color = isset($overlay_row->font_color) ? $overlay_row->font_color : config('video.text.FONT_COLOR');
-                $font_style = isset($overlay_row->font_style) ? $overlay_row->font_style : config('video.text.FONT_STYLE');
-                $font_family = isset($overlay_row->font_family) ? $overlay_row->font_family : config('video.text.FONT_FAMILY');
+                $font_size = (int)isset($overlay_row['font_size']) ? $overlay_row['font_size'] : config('video.text.FONT_SIZE');
+                $font_color = isset($overlay_row['font_color']) ? $overlay_row['font_color'] : config('video.text.FONT_COLOR');
+                $font_style = isset($overlay_row['font_style']) ? $overlay_row['font_style'] : config('video.text.FONT_STYLE');
+                $font_family = isset($overlay_row['font_family']) ? $overlay_row['font_family'] : config('video.text.FONT_FAMILY');
             }
 
-            if($overlay_row->type == "image") {
-                if(!isset($overlay_row->url)) {
+            if($overlay_row['type'] == "image") {
+                if(!isset($overlay_row['url'])) {
                     $errors = ['image_url' => 'Image URL is Required!'];
                     $this->throwError($requestId, $temp, $errors);
                 }
-                $url = $overlay_row->url;
+                $url = $overlay_row['url'];
 
-                if(!isset($overlay_row->x)) {
+                if(!isset($overlay_row['x'])) {
                     $errors = ['image_x' => 'Image X is Required!'];
                     $this->throwError($requestId, $temp, $errors);
                 }
-                $image_x = $overlay_row->x;
+                $image_x = $overlay_row['x'];
 
-                if(!isset($overlay_row->y)) {
+                if(!isset($overlay_row['y'])) {
                     $errors = ['image_y' => 'Image Y is Required!'];
                     $this->throwError($requestId, $temp, $errors);
                 }
-                $image_y = $overlay_row->y;
+                $image_y = $overlay_row['y'];
 
-                if(!isset($overlay_row->height)) {
+                if(!isset($overlay_row['height'])) {
                     $errors = ['image_height' => 'Image Height is Required!'];
                     $this->throwError($requestId, $temp, $errors);
                 }
-                $image_height = $overlay_row->height;
+                $image_height = $overlay_row['height'];
 
-                if(!isset($overlay_row->width)) {
+                if(!isset($overlay_row['width'])) {
                     $errors = ['image_width' => 'Image Width is Required!'];
                     $this->throwError($requestId, $temp, $errors);
                 }
-                $image_width = $overlay_row->width;
+                $image_width = $overlay_row['width'];
                 $image_border = "";
 
-                if(isset($overlay_row->border)) {
-                    $image_border = $overlay_row->border;
+                if(isset($overlay_row['border'])) {
+                    $image_border = $overlay_row['border'];
                 }
             }
         }
 
         foreach($frames as $frame) {
-            if(!isset($frame->url)) {
+            if(!isset($frame['url'])) {
                 $errors = ['frame_url' => 'Frame URL is Required!'];
                 $this->throwError($requestId, $temp, $errors);
             }
-            $frame_url = $frame->url;
+            $frame_url = $frame['url'];
 
-            if(!(int)isset($frame->duration)) {
+            if(!(int)isset($frame['duration'])) {
                 $errors = ['frame_url' => 'Frame Duration is required!'];
                 $this->throwError($requestId, $temp, $errors);
             }
-            $frame_duration = $frame->duration;
+            $frame_duration = $frame['duration'];
 
-            if(!(int)isset($frame->position)) {
+            if(!(int)isset($frame['position'])) {
                 $errors = ['frame_url' => 'Frame Position is required!'];
                 $this->throwError($requestId, $temp, $errors);
             }
-            $frame_position = $frame->position;
+            $frame_position = $frame['position'];
         }
 
-        if(!$this->does_url_exists($video->video_url)) {
+        if(!$this->does_url_exists($video['video_url'])) {
             $errors = ['frame_url' => 'Invalid File URL!'];
             $this->throwError($requestId, $temp, $errors);
         }
@@ -160,14 +159,15 @@ class VideoController extends Controller {
 
             $requestData = new VideoRequestModel();
             $requestData->request_id = $requestId;
-            $requestData->request = $temp;
+            $requestData->request = $video;
             $requestData->response = json_encode($success);
-
+            
             $requestData->save();
-
+            
             if($requestData->save()):
                 event(new VideoEvent($requestData->id));
             endif;
+            
             return response()->json(['success' => true, 'status' => 201, 'message' => '', 'error' => [], 'data' => ['request_id' => $requestId]]);
         }
 
@@ -187,13 +187,6 @@ class VideoController extends Controller {
     }
 
     function does_url_exists($url) {
-       /*  $ch = \curl_init($url);
-        curl_setopt($ch, CURLOPT_NOBODY, true);
-        curl_exec($ch);
-        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $status = ($code == 200) ? TRUE : FALSE;
-        curl_close($ch);
-        return $status; */
         $file = $url;
         $file_headers = @get_headers($file);
         if(!$file_headers || $file_headers[0] == 'HTTP/1.1 404 Not Found') {
